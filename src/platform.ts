@@ -314,36 +314,36 @@ export class CECTVControl implements DynamicPlatformPlugin {
       }
 
       //If a Power Off Event is written to the buffer...
-      if (cecTraffic.indexOf('>> 0f:36') !== -1) {
+      else if (cecTraffic.indexOf('>> 0f:36') !== -1) {
         tvEvent.emit('POWER_OFF');
       }
 
       //If a Power On Event is written to the buffer...
-      if (cecTraffic.indexOf('>> 01:90:00') !== -1) {
+      else if (cecTraffic.indexOf('>> 01:90:00') !== -1) {
         tvEvent.emit('POWER_ON');
       }
 
       //If a Power Standby Event is written to the buffer...
-      if (cecTraffic.indexOf('>> 01:90:01') !== -1) {
+      else if (cecTraffic.indexOf('>> 01:90:01') !== -1) {
         tvEvent.emit('POWER_STANDBY');
       }
+      else {
+        //If an event that wants to change the current input source is written to the buffer...
 
-      //If an event that wants to change the current input source is written to the buffer...
+        //This is basically checking two separate CEC frames: Routing Change, and Set Stream Path.
+        //The first frame is a long one, e.g. 0f:80:X0:00:Y0:00, which specifies that the device is changing from source X to source Y.
+        //The second frame is shorter, e.g. 0f:86:X0:00, which basically specifies that the device is requesting a change to source X.
+        //Depending on how the device implements the CEC spec, it could send either of these frames back, so it's best to check for both.
+        const inputSwitchMatch = />> (0f:80:\d0:00|0f:86):(\d)0:00/.exec(cecTraffic);
+        if (inputSwitchMatch) {
+          tvEvent.emit('INPUT_SWITCHED', inputSwitchMatch[2]);
+        }
 
-      //This is basically checking two separate CEC frames: Routing Change, and Set Stream Path.
-      //The first frame is a long one, e.g. 0f:80:X0:00:Y0:00, which specifies that the device is changing from source X to source Y.
-      //The second frame is shorter, e.g. 0f:86:X0:00, which basically specifies that the device is requesting a change to source X.
-      //Depending on how the device implements the CEC spec, it could send either of these frames back, so it's best to check for both.
-      const inputSwitchMatch = />> (0f:80:\d0:00|0f:86):(\d)0:00/.exec(cecTraffic);
-      if (inputSwitchMatch) {
-        tvEvent.emit('INPUT_SWITCHED', inputSwitchMatch[2]);
+        const inputRequestMatch = />> 0f:82:\d0:00/.exec(cecTraffic);
+        else if (inputRequestMatch) {
+          tvEvent.emit('INPUT_REQUEST', inputRequestMatch[2]);
+        }
       }
-
-      const inputRequestMatch = />> 0f:82:\d0:00/.exec(cecTraffic);
-      if (inputRequestMatch) {
-        tvEvent.emit('INPUT_REQUEST', inputRequestMatch[2]);
-      }
-
     });
 
     let justSwitched = false;
