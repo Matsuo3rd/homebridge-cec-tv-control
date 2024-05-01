@@ -338,10 +338,11 @@ export class CECTVControl implements DynamicPlatformPlugin {
         if (inputSwitchMatch) {
           tvEvent.emit('INPUT_SWITCHED', inputSwitchMatch[2]);
         }
-
-        const inputRequestMatch = />> 0f:82:\d0:00/.exec(cecTraffic);
-        else if (inputRequestMatch) {
-          tvEvent.emit('INPUT_REQUEST', inputRequestMatch[2]);
+        else {
+          const inputRequestMatch = />> 0f:82:\d0:00/.exec(cecTraffic);
+          if (inputRequestMatch) {
+            tvEvent.emit('INPUT_REQUEST', inputRequestMatch[2]);
+          }
         }
       }
     });
